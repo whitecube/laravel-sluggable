@@ -1,0 +1,46 @@
+{
+    "name": "whitecube/laravel-sluggable",
+    "description": "Generate slugs for your models automatically - even with translated attributes",
+    "keywords": [
+        "whitecube",
+        "laravel-sluggable"
+    ],
+    "homepage": "https://github.com/whitecube/laravel-sluggable",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Adrien Leloup",
+            "email": "adrien@whitecube.be",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "illuminate/support": "^6.0",
+        "laravel/helpers": "^1.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^4.0",
+        "phpunit/phpunit": "^8.0",
+        "spatie/laravel-translatable": "^4.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Whitecube\\Sluggable\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Whitecube\\Sluggable\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
