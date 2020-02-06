@@ -56,6 +56,12 @@ class Post extends Model
 
 
 
+### Route Model Binding
+
+Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/5.0/routing#route-model-binding) will use the slug column by default (or the `$sluggableAttribute` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
+
+
+
 ### Translated slugs
 
 You can generate slugs based on translated attributes (using [spatie/laravel-translatable](https://github.com/spatie/laravel-translatable)). Remember to add the `slug` column to the `public $translatable` array to easily access them.
