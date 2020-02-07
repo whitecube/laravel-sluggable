@@ -21,7 +21,7 @@ class TestModelTranslated extends Model
         'title', 'name', 'slug'
     ];
 
-    public function sluggable()
+    public function getSluggable()
     {
         return 'title';
     }

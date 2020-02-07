@@ -15,10 +15,7 @@ class TestModelCustomAttribute extends Model
 
     public $timestamps = false;
 
-    public $sluggableAttribute = 'url';
-
-    public function sluggable()
-    {
-        return 'title';
-    }
+    public $sluggable = 'title';
+    
+    public $slugColumn = 'url';
 }

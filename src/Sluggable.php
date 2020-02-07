@@ -15,13 +15,30 @@ trait Sluggable
     public static function bootSluggable()
     {
         static::saving(function($model) {
-            $model->attributes[$model->getSluggableAttribute()] = $model->generateSlug();
+            $model->attributes[$model->getSlugColumn()] = $model->generateSlug();
         });
     }
 
-    public function getSluggableAttribute()
+    /**
+     * Get the column to generate the slug from
+     *
+     * @param Illuminate\Database\Eloquent\Model $model
+     * @param string $key
+     * @return string
+     */
+    public function getSluggable()
     {
-        return $this->sluggableAttribute ?? 'slug';
+        return $this->sluggable;
+    }
+
+    /**
+     * Get the column to store the slug into
+     *
+     * @return string
+     */
+    public function getSlugColumn()
+    {
+        return $this->slugColumn ?? 'slug';
     }
 
     /**
@@ -45,20 +62,13 @@ trait Sluggable
     }
 
     /**
-     * Get the column to generate the slug from.
-     *
-     * @return string
-     */
-    abstract public function sluggable(): string;
-
-    /**
      * Generate the slug.
      *
      * @return false|string
      */
     protected function generateSlug()
     {
-        return $this->slugify($this->sluggable());
+        return $this->slugify($this->getSluggable());
     }
 
     /**
@@ -123,7 +133,7 @@ trait Sluggable
      */
     public function getRouteKeyName()
     {
-        return $this->getSluggableAttribute();
+        return $this->getSlugColumn();
     }
 
     /**

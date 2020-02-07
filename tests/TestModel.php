@@ -15,8 +15,5 @@ class TestModel extends Model
 
     public $timestamps = false;
 
-    public function sluggable()
-    {
-        return 'title';
-    }
+    public $sluggable = 'title';
 }

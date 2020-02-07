@@ -22,19 +22,14 @@ use Whitecube\Sluggable\Sluggable;
 class Post extends Model
 {
     use Sluggable;
-    
-    public function sluggable(): string
-    {
-        return 'title';
-    }
+
+    public $sluggable = 'title';
 }
 ```
 
-
-
 ### Changing the destination column
 
-By default, the slug is configured to be stored in a column named `slug` in the database. You can overwrite this setting with the `public $sluggableAttribute` property on your model.
+By default, the slug is configured to be stored in a column named `slug` in the database. You can overwrite this setting with the `public $slugColumn` property on your model.
 
 ```php
 <?php
@@ -47,22 +42,15 @@ class Post extends Model
 {
     use Sluggable;
   
-    public $sluggableAttribute = 'custom-slug-column';
-    
-    public function sluggable(): string
-    {
-        return 'title';
-    }
+    public $sluggable = 'title';
+
+    public $slugColumn = 'custom-slug-column';
 }
 ```
 
-
-
 ### Route Model Binding
 
-Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/5.0/routing#route-model-binding) will use the slug column by default (or the `$sluggableAttribute` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
-
-
+Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/master/routing#route-model-binding) will use the slug column by default (or the `$slugColumn` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
 
 ### Translated slugs
 
@@ -83,10 +71,7 @@ class Post extends Model
   
     public $translatable = ['title', 'slug'];
     
-    public function sluggable(): string
-    {
-        return 'title';
-    }
+    public $sluggable = 'title';
 }
 ```
 
@@ -103,15 +88,13 @@ $post->slug; // the-title (given that the crrent app locale is 'en')
 $post->translate('slug', 'fr'); // 'le-titre'
 ```
 
-
-
 ### Cross-language redirects
 
 If the slug provided in the URL does not correspond to an available current-language slug, but corresponds to a slug in another language, this package can automatically redirect to the proper slug.
 
 An example: given the above example's post, we can access it this way
 
-```php
+```
 /en/posts/the-title
 // or
 /fr/articles/le-titre
@@ -119,9 +102,7 @@ An example: given the above example's post, we can access it this way
 
 But if we visit `/fr/articles/the-title`, the package will automatically perform a `301` redirect to `/fr/articles/le-titre`.
 
-This behavior can be disabled by setting `public $disableCrossLangRedirect = true;` on your model, in which case visiting  `/fr/articles/the-title` will just render a `404` page.
-
-
+This behavior can be disabled by setting `public $disableCrossLangRedirect = true;` on your model, in which case visiting `/fr/articles/the-title` will just render a `404` page.
 
 ## Contributing
 
