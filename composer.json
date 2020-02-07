@@ -13,6 +13,11 @@
             "name": "Adrien Leloup",
             "email": "adrien@whitecube.be",
             "role": "Developer"
+        },
+        {
+            "name": "Toon Van den Bos",
+            "email": "toon@whitecube.be",
+            "role": "Developer"
         }
     ],
     "require": {
