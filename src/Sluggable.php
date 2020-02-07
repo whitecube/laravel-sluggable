@@ -2,6 +2,11 @@
 
 namespace Whitecube\Sluggable;
 
+use Illuminate\Routing\ImplicitRouteBinding;
+use Illuminate\Routing\UrlGenerator;
+use \Route;
+use Illuminate\Contracts\Routing\UrlRoutable;
+
 trait Sluggable
 {
     /**
@@ -17,6 +22,26 @@ trait Sluggable
     public function getSluggableAttribute()
     {
         return $this->sluggableAttribute ?? 'slug';
+    }
+
+    /**
+     * @param Illuminate\Database\Eloquent\Model $model
+     * @param string $key
+     * @return string
+     */
+    public function getModelUrl($model, $key)
+    {
+        $route = Route::current();
+
+        foreach($route->signatureParameters(UrlRoutable::class) as $parameter) {
+            if($parameter->getClass()->name !== get_class()) continue;
+            break;
+        }
+
+
+        $route->setParameter($parameter->name, $model->$key);
+
+        return app(UrlGenerator::class)->toRoute($route, $route->parameters(), false);
     }
 
     /**
@@ -111,10 +136,29 @@ trait Sluggable
     {
         $key = $this->getRouteKeyName();
 
-        if ($this->attributeIsTranslatable($key)) {
-            return $this->where($key . '->' . app()->getLocale(), $value)->first();
-        } else {
-            return $this->where($key, $value)->first();
+        if(!$this->attributeIsTranslatable($key)) {
+            return parent::resolveRouteBinding($value);
         }
+
+        // Return exact match if we find it
+        if($result = $this->where($key . '->' . app()->getLocale(), $value)->first()) {
+            return $result;
+        }
+
+        // If cross-lang redirects are disabled, stop here
+        if($this->disableCrossLangRedirect) {
+            return;
+        }
+
+        // Get the models where this slug exists in other langs as well
+        $results = $this->whereRaw('JSON_SEARCH(`'.$key.'`, "one", "'.$value.'")')->get();
+
+        // If we have zero or multiple results, don't guess
+        if($results->count() !== 1) {
+            return;
+        }
+
+        // Redirect to the current route using the translated model key
+        return abort(301, '', ['Location' => $this->getModelUrl($results->first(), $key)]);
     }
 }

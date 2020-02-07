@@ -30,6 +30,8 @@ class Post extends Model
 }
 ```
 
+
+
 ### Changing the destination column
 
 By default, the slug is configured to be stored in a column named `slug` in the database. You can overwrite this setting with the `public $sluggableAttribute` property on your model.
@@ -100,6 +102,24 @@ $post->getAttributes()['slug']; // ['en' => 'the-title', 'fr' => 'le-titre']
 $post->slug; // the-title (given that the crrent app locale is 'en')
 $post->translate('slug', 'fr'); // 'le-titre'
 ```
+
+
+
+### Cross-language redirects
+
+If the slug provided in the URL does not correspond to an available current-language slug, but corresponds to a slug in another language, this package can automatically redirect to the proper slug.
+
+An example: given the above example's post, we can access it this way
+
+```php
+/en/posts/the-title
+// or
+/fr/articles/le-titre
+```
+
+But if we visit `/fr/articles/the-title`, the package will automatically perform a `301` redirect to `/fr/articles/le-titre`.
+
+This behavior can be disabled by setting `public $disableCrossLangRedirect = true;` on your model, in which case visiting  `/fr/articles/the-title` will just render a `404` page.
 
 
 
