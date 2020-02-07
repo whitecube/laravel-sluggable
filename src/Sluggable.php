@@ -22,8 +22,6 @@ trait Sluggable
     /**
      * Get the column to generate the slug from
      *
-     * @param Illuminate\Database\Eloquent\Model $model
-     * @param string $key
      * @return string
      */
     public function getSluggable()
@@ -54,7 +52,6 @@ trait Sluggable
             if($parameter->getClass()->name !== get_class()) continue;
             break;
         }
-
 
         $route->setParameter($parameter->name, $model->$key);
 

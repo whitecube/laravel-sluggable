@@ -48,6 +48,33 @@ class Post extends Model
 }
 ```
 
+### Conditional sluggable columns
+
+If needed, you can overwrite the trait's `getSluggable()` method and put your own sluggable attribute choice logic in it:
+
+```php
+<?php
+
+namespace App;
+
+use Whitecube\Sluggable\Sluggable;
+
+class Post extends Model
+{
+    use Sluggable;
+  
+    /**
+     * Get the column to generate the slug from
+     *
+     * @return string
+     */
+    public function getSluggable()
+    {
+        return $this->title ? 'title' : 'author';
+    }
+}
+```
+
 ### Route Model Binding
 
 Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/master/routing#route-model-binding) will use the slug column by default (or the `$slugColumn` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
