@@ -69,10 +69,6 @@ class Post extends Model
 }
 ```
 
-### Route Model Binding
-
-Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/master/routing#route-model-binding) will use the slug attribute by default (or the `$slugStorageAttribute` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
-
 ### Translated slugs
 
 You can generate slugs based on translated attributes (using [spatie/laravel-translatable](https://github.com/spatie/laravel-translatable)). Remember to add the `slug` attribute to the `public $translatable` array to easily access them.
@@ -107,6 +103,12 @@ $post->slug; // the-title (given that the crrent app locale is 'en')
 $post->translate('slug', 'fr'); // 'le-titre'
 ```
 
+## Route Model Binding
+
+Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/master/routing#route-model-binding) will use the slug attribute by default (or the `$slugStorageAttribute` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
+
+When using Route Model Binding, some other interesting features become available.
+
 ### Cross-language redirects
 
 If the slug provided in the URL does not correspond to the current locale's slug translation, but corresponds to a slug in another language, this package can automatically redirect to the proper slug.
@@ -121,6 +123,31 @@ An example: given the above example's post, we could imagine the following routi
 But if we visit `/fr/articles/the-title`, the package will automatically perform a `301` redirect to `/fr/articles/le-titre`.
 
 This behavior can be disabled by setting `public $slugTranslationRedirect = false;` on your model, in which case visiting `/fr/articles/the-title` will just render a `404` page.
+
+### Translated URL generator
+
+Do you need to generate alternate locale links for a translated sluggable model? We've got you covered. Take a look at `getSluggedUrlForRoute($route, $locale, $fullUrl)`:
+
+```php
+$post = Post::create([
+    'title' => [
+        'en' => 'The title in English',
+        'fr' => 'Le titre en Français'
+    ]
+]);
+
+$alternates = [];
+
+foreach (['en', 'fr'] as $locale) {
+    $alternates[] = $post->getSluggedUrlForRoute(Route::current(), $locale);
+}
+```
+
+Considering the current route being `/blog/{post}/{tab}` with request parameter `{tab} = 'comments'`, the result would be:
+```
+/blog/the-title-in-english/comments
+/blog/le-titre-en-francais/comments
+```
 
 ## Contributing
 
