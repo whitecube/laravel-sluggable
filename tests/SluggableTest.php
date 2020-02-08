@@ -47,6 +47,6 @@ class SluggableTest extends TestCase
 
         $route->bind(request());
 
-        $this->assertSame('/foo/french-title/some-value', $model->getSluggedUrlForRoute($route, 'fr'));
+        $this->assertSame('/foo/french-title/some-value', $model->getSluggedUrlForRoute($route, 'fr', false));
     }
 }

@@ -120,14 +120,14 @@ trait HasSlug
      *
      * @param Illuminate\Routing\Route $route
      * @param null|string $locale
-     * @param null|Illuminate\Database\Eloquent\Model $model
+     * @param bool $fullUrl
      * @return string
      */
-    public function getSluggedUrlForRoute(Route $route, $locale = null, $model = null)
+    public function getSluggedUrlForRoute(Route $route, $locale = null, $fullUrl = true)
     {
-        $parameters = $this->getTranslatedSlugRouteParameters($route, $locale, $model);
+        $parameters = $this->getTranslatedSlugRouteParameters($route, $locale);
 
-        return app(UrlGenerator::class)->toRoute($route, $parameters, false);
+        return app(UrlGenerator::class)->toRoute($route, $parameters, $fullUrl);
     }
 
     /**
@@ -136,17 +136,14 @@ trait HasSlug
      *
      * @param Illuminate\Routing\Route $route
      * @param null|string $locale
-     * @param null|Illuminate\Database\Eloquent\Model $model
      * @return array
      */
-    public function getTranslatedSlugRouteParameters(Route $route, $locale = null, $model = null)
+    public function getTranslatedSlugRouteParameters(Route $route, $locale = null)
     {
-        $model = is_null($model) ? $this : $model;
-
         $parameters = $route->signatureParameters(UrlRoutable::class);
 
-        $parameter = array_reduce($parameters, function($carry, $parameter) use ($model) {
-            if($carry || $parameter->getClass()->name !== get_class($model)) return $carry;
+        $parameter = array_reduce($parameters, function($carry, $parameter) {
+            if($carry || $parameter->getClass()->name !== get_class()) return $carry;
             return $parameter;
         });
 
@@ -154,11 +151,11 @@ trait HasSlug
             return $route->parameters();
         }
 
-        $key = $model->getRouteKeyName();
+        $key = $this->getRouteKeyName();
 
-        $value = ($model->attributeIsTranslatable($key) && $locale)
-            ? $model->getTranslation($key, $locale)
-            : $model->$key;
+        $value = ($this->attributeIsTranslatable($key) && $locale)
+            ? $this->getTranslation($key, $locale)
+            : $this->$key;
 
         $route->setParameter($parameter->name, $value);
 
@@ -200,10 +197,8 @@ trait HasSlug
         }
 
         // Redirect to the current route using the translated model key
-        return abort(301, '', ['Location' => $this->getSluggedUrlForRoute(
-            Router::current(),
-            $locale,
-            $results->first()
+        return abort(301, '', ['Location' => $results->first()->getSluggedUrlForRoute(
+            Router::current(), $locale, false
         )]);
     }
 }
