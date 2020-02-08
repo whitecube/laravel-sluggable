@@ -2,9 +2,10 @@
 
 namespace Whitecube\Sluggable;
 
-use Route;
+use Illuminate\Routing\Route;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Support\Facades\Route as Router;
 
 trait HasSlug
 {
@@ -36,25 +37,6 @@ trait HasSlug
     public function getSlugStorageAttribute()
     {
         return $this->slugStorageAttribute ?? 'slug';
-    }
-
-    /**
-     * @param Illuminate\Database\Eloquent\Model $model
-     * @param string $key
-     * @return string
-     */
-    public function getModelUrl($model, $key)
-    {
-        $route = Route::current();
-
-        foreach($route->signatureParameters(UrlRoutable::class) as $parameter) {
-            if($parameter->getClass()->name !== get_class()) continue;
-            break;
-        }
-
-        $route->setParameter($parameter->name, $model->$key);
-
-        return app(UrlGenerator::class)->toRoute($route, $route->parameters(), false);
     }
 
     /**
@@ -133,6 +115,57 @@ trait HasSlug
     }
 
     /**
+     * Generate an URI containing the model's slug from
+     * given route.
+     *
+     * @param Illuminate\Routing\Route $route
+     * @param null|string $locale
+     * @param null|Illuminate\Database\Eloquent\Model $model
+     * @return string
+     */
+    public function getSluggedUrlForRoute(Route $route, $locale = null, $model = null)
+    {
+        $parameters = $this->getTranslatedSlugRouteParameters($route, $locale, $model);
+
+        return app(UrlGenerator::class)->toRoute($route, $parameters, false);
+    }
+
+    /**
+     * Get a bound route's parameters with the 
+     * model's slug set to the desired locale.
+     *
+     * @param Illuminate\Routing\Route $route
+     * @param null|string $locale
+     * @param null|Illuminate\Database\Eloquent\Model $model
+     * @return array
+     */
+    public function getTranslatedSlugRouteParameters(Route $route, $locale = null, $model = null)
+    {
+        $model = is_null($model) ? $this : $model;
+
+        $parameters = $route->signatureParameters(UrlRoutable::class);
+
+        $parameter = array_reduce($parameters, function($carry, $parameter) use ($model) {
+            if($carry || $parameter->getClass()->name !== get_class($model)) return $carry;
+            return $parameter;
+        });
+
+        if(!$parameter) {
+            return $route->parameters();
+        }
+
+        $key = $model->getRouteKeyName();
+
+        $value = ($model->attributeIsTranslatable($key) && $locale)
+            ? $model->getTranslation($key, $locale)
+            : $model->$key;
+
+        $route->setParameter($parameter->name, $value);
+
+        return $route->parameters();
+    }
+
+    /**
      * Resolve the route binding with the translatable slug in mind
      *
      * @param $value
@@ -146,8 +179,10 @@ trait HasSlug
             return parent::resolveRouteBinding($value);
         }
 
+        $locale = app()->getLocale();
+
         // Return exact match if we find it
-        if($result = $this->where($key . '->' . app()->getLocale(), $value)->first()) {
+        if($result = $this->where($key . '->' . $locale, $value)->first()) {
             return $result;
         }
 
@@ -165,6 +200,10 @@ trait HasSlug
         }
 
         // Redirect to the current route using the translated model key
-        return abort(301, '', ['Location' => $this->getModelUrl($results->first(), $key)]);
+        return abort(301, '', ['Location' => $this->getSluggedUrlForRoute(
+            Router::current(),
+            $locale,
+            $results->first()
+        )]);
     }
 }

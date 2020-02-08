@@ -31,4 +31,22 @@ class SluggableTest extends TestCase
 
         $this->assertSame('my-test-title', $model->url);
     }
+
+    public function test_can_generate_translated_url_for_route()
+    {
+        $route = new \Illuminate\Routing\Route('GET', '/foo/{testmodel}/{something}', function(TestModelTranslated $testmodel) {});
+
+        $model = TestModelTranslated::create([
+            'title' => [
+                'en' => 'English title',
+                'fr' => 'French title'
+            ]
+        ]);
+
+        $this->get('/foo/english-title/some-value');
+
+        $route->bind(request());
+
+        $this->assertSame('/foo/french-title/some-value', $model->getSluggedUrlForRoute($route, 'fr'));
+    }
 }
