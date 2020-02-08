@@ -2,25 +2,24 @@
 
 namespace Whitecube\Sluggable;
 
-use Illuminate\Routing\ImplicitRouteBinding;
+use Route;
 use Illuminate\Routing\UrlGenerator;
-use \Route;
 use Illuminate\Contracts\Routing\UrlRoutable;
 
-trait Sluggable
+trait HasSlug
 {
     /**
      * Register the saving event callback
      */
-    public static function bootSluggable()
+    public static function bootHasSlug()
     {
         static::saving(function($model) {
-            $model->attributes[$model->getSlugColumn()] = $model->generateSlug();
+            $model->attributes[$model->getSlugStorageAttribute()] = $model->generateSlug();
         });
     }
 
     /**
-     * Get the column to generate the slug from
+     * Get the attribute name used to generate the slug from
      *
      * @return string
      */
@@ -30,13 +29,13 @@ trait Sluggable
     }
 
     /**
-     * Get the column to store the slug into
+     * Get the attribute name used to store the slug into
      *
      * @return string
      */
-    public function getSlugColumn()
+    public function getSlugStorageAttribute()
     {
-        return $this->slugColumn ?? 'slug';
+        return $this->slugStorageAttribute ?? 'slug';
     }
 
     /**
@@ -130,7 +129,7 @@ trait Sluggable
      */
     public function getRouteKeyName()
     {
-        return $this->getSlugColumn();
+        return $this->getSlugStorageAttribute();
     }
 
     /**
@@ -153,7 +152,7 @@ trait Sluggable
         }
 
         // If cross-lang redirects are disabled, stop here
-        if($this->disableCrossLangRedirect) {
+        if(!($this->slugTranslationRedirect ?? true)) {
             return;
         }
 

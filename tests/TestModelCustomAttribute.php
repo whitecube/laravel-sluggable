@@ -3,11 +3,11 @@
 namespace Whitecube\Sluggable\Tests;
 
 use Illuminate\Database\Eloquent\Model;
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 
 class TestModelCustomAttribute extends Model
 {
-    use Sluggable;
+    use HasSlug;
 
     protected $table = 'test_model_custom_attributes';
 
@@ -17,5 +17,5 @@ class TestModelCustomAttribute extends Model
 
     public $sluggable = 'title';
     
-    public $slugColumn = 'url';
+    public $slugStorageAttribute = 'url';
 }

@@ -4,7 +4,6 @@ namespace Whitecube\Sluggable\Tests;
 
 class SluggableTest extends TestCase
 {
-
     public function test_it_saves_slug_on_model_save()
     {
         $model = TestModel::create(['title' => 'My test title']);

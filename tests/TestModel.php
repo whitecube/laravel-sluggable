@@ -3,11 +3,11 @@
 namespace Whitecube\Sluggable\Tests;
 
 use Illuminate\Database\Eloquent\Model;
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 
 class TestModel extends Model
 {
-    use Sluggable;
+    use HasSlug;
 
     protected $table = 'test_models';
 
