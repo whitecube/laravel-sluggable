@@ -168,7 +168,7 @@ trait HasSlug
      * @param $value
      * @return mixed
      */
-    public function resolveRouteBinding($value)
+    public function resolveRouteBinding($value, $field = null)
     {
         $key = $this->getRouteKeyName();
 
