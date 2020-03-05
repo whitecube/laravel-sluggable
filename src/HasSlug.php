@@ -15,7 +15,11 @@ trait HasSlug
     public static function bootHasSlug()
     {
         static::saving(function($model) {
-            $model->attributes[$model->getSlugStorageAttribute()] = $model->generateSlug();
+            $attribute = $model->getSlugStorageAttribute();
+            
+            if(!is_null($model->attributes[$attribute])) return;
+            
+            $model->attributes[$attribute] = $model->generateSlug();
         });
     }
 
