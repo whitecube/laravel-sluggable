@@ -4,11 +4,11 @@ namespace Whitecube\Sluggable\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 
 class TestModelTranslated extends Model
 {
-    use Sluggable;
+    use HasSlug;
     use HasTranslations;
 
     protected $table = 'test_model_translatables';

@@ -1,6 +1,6 @@
 # Laravel Sluggable
 
-A trait to use on your models to generate slugs based on another column. Supports translated attributes (using [spatie/laravel-translatable](https://github.com/spatie/laravel-translatable)).
+A trait to use on your models to generate slugs based on another attribute's value. Supports translated attributes (using [spatie/laravel-translatable](https://github.com/spatie/laravel-translatable)).
 
 ## Installation
 
@@ -13,58 +13,52 @@ composer require whitecube/laravel-sluggable
 ## Usage
 
 ``` php
-<?php
-
 namespace App;
 
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 
 class Post extends Model
 {
-    use Sluggable;
+    use HasSlug;
 
     public $sluggable = 'title';
 }
 ```
 
-### Changing the destination column
+### Changing the slug storage attribute
 
-By default, the slug is configured to be stored in a column named `slug` in the database. You can overwrite this setting with the `public $slugColumn` property on your model.
+By default, the slug is configured to be stored in an attribute named `slug`. You can overwrite this setting with the `public $slugStorageAttribute` property on your model.
 
 ```php
-<?php
-
 namespace App;
 
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 
 class Post extends Model
 {
-    use Sluggable;
+    use HasSlug;
   
     public $sluggable = 'title';
 
-    public $slugColumn = 'custom-slug-column';
+    public $slugStorageAttribute = 'custom-slug-column';
 }
 ```
 
-### Conditional sluggable columns
+### Conditional sluggable attributes
 
 If needed, you can overwrite the trait's `getSluggable()` method and put your own sluggable attribute choice logic in it:
 
 ```php
-<?php
-
 namespace App;
 
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 
 class Post extends Model
 {
-    use Sluggable;
+    use HasSlug;
   
     /**
-     * Get the column to generate the slug from
+     * Get the attribute name used to generate the slug from
      *
      * @return string
      */
@@ -75,25 +69,19 @@ class Post extends Model
 }
 ```
 
-### Route Model Binding
-
-Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/master/routing#route-model-binding) will use the slug column by default (or the `$slugColumn` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
-
 ### Translated slugs
 
-You can generate slugs based on translated attributes (using [spatie/laravel-translatable](https://github.com/spatie/laravel-translatable)). Remember to add the `slug` column to the `public $translatable` array to easily access them.
+You can generate slugs based on translated attributes (using [spatie/laravel-translatable](https://github.com/spatie/laravel-translatable)). Remember to add the `slug` attribute to the `public $translatable` array to easily access them.
 
 ```php
-<?php
-
 namespace App;
 
-use Whitecube\Sluggable\Sluggable;
+use Whitecube\Sluggable\HasSlug;
 use Spatie\Translatable\HasTranslations;
 
 class Post extends Model
 {
-    use Sluggable;
+    use HasSlug;
     use HasTranslations;
   
     public $translatable = ['title', 'slug'];
@@ -115,21 +103,55 @@ $post->slug; // the-title (given that the crrent app locale is 'en')
 $post->translate('slug', 'fr'); // 'le-titre'
 ```
 
+## Route Model Binding
+
+Be advised that this package overrides the `getRouteKeyName` method, which means [Laravel's Route Model Binding](https://laravel.com/docs/master/routing#route-model-binding) will use the slug attribute by default (or the `$slugStorageAttribute` you have defined). In most cases, this is great, saves you a step and cleans up your models, but if you must, you can change it to whatever you like.
+
+When using Route Model Binding, some other interesting features become available.
+
 ### Cross-language redirects
 
-If the slug provided in the URL does not correspond to an available current-language slug, but corresponds to a slug in another language, this package can automatically redirect to the proper slug.
+If the slug provided in the URL does not correspond to the current locale's slug translation, but corresponds to a slug in another language, this package can automatically redirect to the proper slug.
 
-An example: given the above example's post, we can access it this way
+An example: given the above example's post, we could imagine the following routing configuration:
 
 ```
 /en/posts/the-title
-// or
 /fr/articles/le-titre
 ```
 
 But if we visit `/fr/articles/the-title`, the package will automatically perform a `301` redirect to `/fr/articles/le-titre`.
 
-This behavior can be disabled by setting `public $disableCrossLangRedirect = true;` on your model, in which case visiting `/fr/articles/the-title` will just render a `404` page.
+This behavior can be disabled by setting `public $slugTranslationRedirect = false;` on your model, in which case visiting `/fr/articles/the-title` will just render a `404` page.
+
+### Translated URL generator
+
+Do you need to generate alternate locale links for a translated sluggable model? We've got you covered. Take a look at `getSluggedUrlForRoute($route, $locale, $fullUrl)`:
+
+```php
+$post = Post::create([
+    'title' => [
+        'en' => 'The title in English',
+        'fr' => 'Le titre en Français'
+    ]
+]);
+
+$alternates = [];
+
+foreach (['en', 'fr'] as $locale) {
+    $alternates[] = $post->getSluggedUrlForRoute(Route::current(), $locale);
+}
+```
+
+Considering the current route being `/blog/{post}/{tab}` with request parameter `{tab} = 'comments'`, the result would be:
+```
+/blog/the-title-in-english/comments
+/blog/le-titre-en-francais/comments
+```
+
+## 💖 Sponsorships 
+
+If you are reliant on this package in your production applications, consider [sponsoring us](https://github.com/sponsors/whitecube)! It is the best way to help us keep doing what we love to do: making great open source software.
 
 ## Contributing
 

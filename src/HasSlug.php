@@ -2,25 +2,25 @@
 
 namespace Whitecube\Sluggable;
 
-use Illuminate\Routing\ImplicitRouteBinding;
+use Illuminate\Routing\Route;
 use Illuminate\Routing\UrlGenerator;
-use \Route;
 use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Support\Facades\Route as Router;
 
-trait Sluggable
+trait HasSlug
 {
     /**
      * Register the saving event callback
      */
-    public static function bootSluggable()
+    public static function bootHasSlug()
     {
         static::saving(function($model) {
-            $model->attributes[$model->getSlugColumn()] = $model->generateSlug();
+            $model->attributes[$model->getSlugStorageAttribute()] = $model->generateSlug();
         });
     }
 
     /**
-     * Get the column to generate the slug from
+     * Get the attribute name used to generate the slug from
      *
      * @return string
      */
@@ -30,32 +30,13 @@ trait Sluggable
     }
 
     /**
-     * Get the column to store the slug into
+     * Get the attribute name used to store the slug into
      *
      * @return string
      */
-    public function getSlugColumn()
+    public function getSlugStorageAttribute()
     {
-        return $this->slugColumn ?? 'slug';
-    }
-
-    /**
-     * @param Illuminate\Database\Eloquent\Model $model
-     * @param string $key
-     * @return string
-     */
-    public function getModelUrl($model, $key)
-    {
-        $route = Route::current();
-
-        foreach($route->signatureParameters(UrlRoutable::class) as $parameter) {
-            if($parameter->getClass()->name !== get_class()) continue;
-            break;
-        }
-
-        $route->setParameter($parameter->name, $model->$key);
-
-        return app(UrlGenerator::class)->toRoute($route, $route->parameters(), false);
+        return $this->slugStorageAttribute ?? 'slug';
     }
 
     /**
@@ -130,7 +111,55 @@ trait Sluggable
      */
     public function getRouteKeyName()
     {
-        return $this->getSlugColumn();
+        return $this->getSlugStorageAttribute();
+    }
+
+    /**
+     * Generate an URI containing the model's slug from
+     * given route.
+     *
+     * @param Illuminate\Routing\Route $route
+     * @param null|string $locale
+     * @param bool $fullUrl
+     * @return string
+     */
+    public function getSluggedUrlForRoute(Route $route, $locale = null, $fullUrl = true)
+    {
+        $parameters = $this->getTranslatedSlugRouteParameters($route, $locale);
+
+        return app(UrlGenerator::class)->toRoute($route, $parameters, $fullUrl);
+    }
+
+    /**
+     * Get a bound route's parameters with the 
+     * model's slug set to the desired locale.
+     *
+     * @param Illuminate\Routing\Route $route
+     * @param null|string $locale
+     * @return array
+     */
+    public function getTranslatedSlugRouteParameters(Route $route, $locale = null)
+    {
+        $parameters = $route->signatureParameters(UrlRoutable::class);
+
+        $parameter = array_reduce($parameters, function($carry, $parameter) {
+            if($carry || $parameter->getClass()->name !== get_class()) return $carry;
+            return $parameter;
+        });
+
+        if(!$parameter) {
+            return $route->parameters();
+        }
+
+        $key = $this->getRouteKeyName();
+
+        $value = ($this->attributeIsTranslatable($key) && $locale)
+            ? $this->getTranslation($key, $locale)
+            : $this->$key;
+
+        $route->setParameter($parameter->name, $value);
+
+        return $route->parameters();
     }
 
     /**
@@ -147,13 +176,15 @@ trait Sluggable
             return parent::resolveRouteBinding($value);
         }
 
+        $locale = app()->getLocale();
+
         // Return exact match if we find it
-        if($result = $this->where($key . '->' . app()->getLocale(), $value)->first()) {
+        if($result = $this->where($key . '->' . $locale, $value)->first()) {
             return $result;
         }
 
         // If cross-lang redirects are disabled, stop here
-        if($this->disableCrossLangRedirect) {
+        if(!($this->slugTranslationRedirect ?? true)) {
             return;
         }
 
@@ -166,6 +197,8 @@ trait Sluggable
         }
 
         // Redirect to the current route using the translated model key
-        return abort(301, '', ['Location' => $this->getModelUrl($results->first(), $key)]);
+        return abort(301, '', ['Location' => $results->first()->getSluggedUrlForRoute(
+            Router::current(), $locale, false
+        )]);
     }
 }
