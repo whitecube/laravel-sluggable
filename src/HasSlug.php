@@ -16,11 +16,34 @@ trait HasSlug
     {
         static::saving(function($model) {
             $attribute = $model->getSlugStorageAttribute();
-            
-            if(!is_null($model->attributes[$attribute])) return;
-            
-            $model->attributes[$attribute] = $model->generateSlug();
+
+            if($model->attributeIsTranslatable($attribute)) {
+                $model->translateSlugs($attribute);
+            } else {
+                if(!is_null($model->attributes[$attribute])) return;
+
+                $model->attributes[$attribute] = str_slug($model->$sluggable);
+            }
         });
+    }
+
+    /**
+     * Generate translated slugs. Keeps any existing translated slugs.
+     *
+     * @param string $attribute
+     */
+    public function translateSlugs($attribute)
+    {
+        $sluggable = $this->getSluggable();
+        $value = json_decode($this->attributes[$attribute], true);
+
+        foreach($this->getTranslatedLocales($this->getSluggable()) as $locale) {
+            if(!isset($value[$locale]) || is_null($value[$locale])) {
+                $value[$locale] = str_slug($this->getTranslation($sluggable, $locale));
+            }
+        }
+
+        $this->attributes[$attribute] = json_encode($value);
     }
 
     /**
@@ -41,49 +64,6 @@ trait HasSlug
     public function getSlugStorageAttribute()
     {
         return $this->slugStorageAttribute ?? 'slug';
-    }
-
-    /**
-     * Generate the slug.
-     *
-     * @return false|string
-     */
-    protected function generateSlug()
-    {
-        return $this->slugify($this->getSluggable());
-    }
-
-    /**
-     * Handle the slug generation for translatable and
-     * non-translatable attributes.
-     *
-     * @param string $attribute
-     * @return false|string
-     */
-    protected function slugify($attribute)
-    {
-        if($this->attributeIsTranslatable($attribute)) {
-            return json_encode($this->translatedSlugs($attribute));
-        }
-
-        return str_slug($this->$attribute);
-    }
-
-    /**
-     * Handle the generation of translated slugs
-     *
-     * @param string $attribute
-     * @return array
-     */
-    protected function translatedSlugs($attribute)
-    {
-        $slugs = [];
-
-        foreach($this->getTranslatedLocales($attribute) as $locale) {
-            $slugs[$locale] = str_slug($this->getTranslation($attribute, $locale));
-        }
-
-        return $slugs;
     }
 
     /**
@@ -135,7 +115,7 @@ trait HasSlug
     }
 
     /**
-     * Get a bound route's parameters with the 
+     * Get a bound route's parameters with the
      * model's slug set to the desired locale.
      *
      * @param Illuminate\Routing\Route $route
