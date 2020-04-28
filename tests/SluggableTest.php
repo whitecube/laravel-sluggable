@@ -11,6 +11,16 @@ class SluggableTest extends TestCase
         $this->assertSame('my-test-title', $model->slug);
     }
 
+    public function test_it_does_not_overwrite_existing_slug()
+    {
+        $model = TestModel::create([
+            'title' => 'My test title',
+            'slug' => 'custom-slug'
+        ]);
+
+        $this->assertSame('custom-slug', $model->slug);
+    }
+
     public function test_it_saves_translated_slugs()
     {
         $model = TestModelTranslated::create([
@@ -23,6 +33,24 @@ class SluggableTest extends TestCase
         $this->assertSame('{"en":"my-test-title","fr":"mon-titre-test"}', $model->getAttributes()['slug']);
         $this->assertSame('my-test-title', $model->slug);
         $this->assertSame('mon-titre-test', $model->translate('slug', 'fr'));
+    }
+
+    public function test_it_only_generates_missing_translated_slugs()
+    {
+        $model = TestModelTranslated::create([
+            'title' => [
+                'en' => 'My test title',
+                'fr' => 'Mon titre test'
+            ],
+            'slug' => [
+                'en' => null,
+                'fr' => 'custom-french-slug'
+            ]
+        ]);
+
+        $this->assertSame('{"en":"my-test-title","fr":"custom-french-slug"}', $model->getAttributes()['slug']);
+        $this->assertSame('my-test-title', $model->slug);
+        $this->assertSame('custom-french-slug', $model->translate('slug', 'fr'));
     }
 
     public function test_can_override_sluggable_attribute()

@@ -20,8 +20,9 @@ trait HasSlug
             if($model->attributeIsTranslatable($attribute)) {
                 $model->translateSlugs($attribute);
             } else {
-                if(!is_null($model->attributes[$attribute])) return;
+                if(!is_null($model->$attribute)) return;
 
+                $sluggable = $model->getSluggable();
                 $model->attributes[$attribute] = str_slug($model->$sluggable);
             }
         });
@@ -35,7 +36,9 @@ trait HasSlug
     public function translateSlugs($attribute)
     {
         $sluggable = $this->getSluggable();
-        $value = json_decode($this->attributes[$attribute], true);
+        $value = isset($this->attributes[$attribute])
+            ? json_decode($this->attributes[$attribute], true)
+            : [];
 
         foreach($this->getTranslatedLocales($this->getSluggable()) as $locale) {
             if(!isset($value[$locale]) || is_null($value[$locale])) {
