@@ -109,6 +109,27 @@ Be advised that this package overrides the `getRouteKeyName` method, which means
 
 When using Route Model Binding, some other interesting features become available.
 
+### Custom Route Model Binding Query
+
+Sometimes you'd want to add custom behavior to the query Laravel performs. This packages makes it possible to hook into the query by defining a `getRouteBindingQuery` method on the model, which could be useful in several cases such as including soft-deleted results :
+
+```php
+namespace App;
+
+use Whitecube\Sluggable\HasSlug;
+
+class Post extends Model
+{
+    use HasSlug;
+    
+    // ...
+
+    protected function getRouteBindingQuery($query) {
+        return $query->withTrashed();
+    }
+}
+```
+
 ### Cross-language redirects
 
 If the slug provided in the URL does not correspond to the current locale's slug translation, but corresponds to a slug in another language, this package can automatically redirect to the proper slug.
