@@ -166,7 +166,11 @@ trait HasSlug
         $locale = app()->getLocale();
 
         // Return exact match if we find it
-        if($result = $this->where($key . '->' . $locale, $value)->first()) {
+        $result = $this->getRouteBindingQueryBuilder()
+            ->where($key . '->' . $locale, $value)
+            ->first();
+
+        if($result) {
             return $result;
         }
 
@@ -176,7 +180,9 @@ trait HasSlug
         }
 
         // Get the models where this slug exists in other langs as well
-        $results = $this->whereRaw('JSON_SEARCH(`'.$key.'`, "one", "'.$value.'")')->get();
+        $results = $this->getRouteBindingQueryBuilder()
+            ->whereRaw('JSON_SEARCH(`'.$key.'`, "one", "'.$value.'")')
+            ->get();
 
         // If we have zero or multiple results, don't guess
         if($results->count() !== 1) {
@@ -187,5 +193,22 @@ trait HasSlug
         return abort(301, '', ['Location' => $results->first()->getSluggedUrlForRoute(
             Router::current(), $locale, false
         )]);
+    }
+
+    /**
+     * Get a new query builder for the Route Binding
+     *
+     * @param $value
+     * @return mixed
+     */
+    protected function getRouteBindingQueryBuilder()
+    {
+        $query = $this->newQuery();
+
+        if(method_exists($this, 'getRouteBindingQuery')) {
+            return $this->getRouteBindingQuery($query);
+        }
+
+        return $query;
     }
 }

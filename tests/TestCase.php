@@ -47,6 +47,7 @@ abstract class TestCase extends Orchestra
             $table->json('title')->nullable();
             $table->json('name')->nullable();
             $table->json('slug')->nullable();
+            $table->softDeletes();
         });
 
         $this->app['db']->connection()->getSchemaBuilder()->create('test_model_custom_attributes', function (Blueprint $table) {

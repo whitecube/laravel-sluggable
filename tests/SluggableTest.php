@@ -77,4 +77,40 @@ class SluggableTest extends TestCase
 
         $this->assertSame('/foo/french-title/some-value', $model->getSluggedUrlForRoute($route, 'fr', false));
     }
+
+    public function test_can_resolve_model()
+    {
+        TestModelTranslated::create([
+            'title' => [
+                'en' => 'English title',
+                'fr' => 'French title'
+            ]
+        ]);
+
+        $result = (new TestModelTranslated())
+            ->resolveRouteBinding('english-title');
+
+        $this->assertSame('English title', $result ? $result->title : null);
+    }
+
+    public function test_can_resolve_model_with_custom_query()
+    {
+        TestModelTranslated::create([
+            'title' => [
+                'en' => 'English custom query',
+                'fr' => 'French custom query'
+            ],
+            'deleted_at' => now()
+        ]);
+
+        $instance = new class() extends TestModelTranslated {
+            protected function getRouteBindingQuery($query) {
+                return $query->withTrashed();
+            }
+        };
+
+        $result = $instance->resolveRouteBinding('english-custom-query');
+
+        $this->assertSame('English custom query', $result ? $result->title : null);
+    }
 }
