@@ -23,7 +23,7 @@ trait HasSlug
                 if(!is_null($model->$attribute)) return;
 
                 $sluggable = $model->getSluggable();
-                $model->attributes[$attribute] = str_slug($model->$sluggable);
+                $model->attributes[$attribute] = $model->getUniqueSlug($model->$sluggable);
             }
         });
     }
@@ -42,11 +42,65 @@ trait HasSlug
 
         foreach($this->getTranslatedLocales($this->getSluggable()) as $locale) {
             if(!isset($value[$locale]) || is_null($value[$locale])) {
-                $value[$locale] = str_slug($this->getTranslation($sluggable, $locale));
+                $value[$locale] = $this->getUniqueSlug($sluggable, $locale);
             }
         }
 
         $this->attributes[$attribute] = json_encode($value);
+    }
+
+    /**
+     * Get a unique slug
+     *
+     * @param string $value
+     * @param string|null $locale
+     * @return string
+     */
+    public function getUniqueSlug($sluggable, $locale = null)
+    {
+        if(!is_null($locale)) {
+            $sluggable = $this->getTranslation($sluggable, $locale);
+        }
+
+        $slug = str_slug($sluggable);
+
+        $i = 1;
+        while($this->slugExists($slug, $locale)) {
+            $slug = $slug . '-' . $i;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Check if the slug exists (for the given locale if any)
+     *
+     * @param string $slug
+     * @param string|null $locale
+     * @return bool
+     */
+    public function slugExists($slug, $locale = null)
+    {
+        $whereKey = is_null($locale) ? $this->getSlugStorageAttribute() : $this->getSlugStorageAttribute().'->'.$locale;
+
+        $query = static::where($whereKey, $slug)
+            ->withoutGlobalScopes();
+
+        if ($this->usesSoftDeletes()) {
+            $query->withTrashed();
+        }
+
+        return $query->exists();
+    }
+
+    /**
+     * Check if model uses soft deletes
+     *
+     * @return bool
+     */
+    protected function usesSoftDeletes(): bool
+    {
+        return (bool) in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this));
     }
 
     /**

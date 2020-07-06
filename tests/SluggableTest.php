@@ -113,4 +113,15 @@ class SluggableTest extends TestCase
 
         $this->assertSame('English custom query', $result ? $result->title : null);
     }
+
+    public function test_it_generates_unique_slugs()
+    {
+        $model = TestModel::create(['title' => 'My test title']);
+
+        $this->assertSame('my-test-title', $model->slug);
+
+        $model = TestModel::create(['title' => 'My test title']);
+
+        $this->assertNotEquals('my-test-title', $model->slug);
+    }
 }
