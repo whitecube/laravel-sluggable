@@ -110,7 +110,7 @@ trait HasSlug
      */
     protected function getSlugExistsQuery($whereKey, $slug)
     {
-        return $query = static::where($whereKey, $slug)
+        return static::where($whereKey, $slug)
             ->withoutGlobalScopes();
     }
 
