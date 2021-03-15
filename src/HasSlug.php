@@ -64,8 +64,12 @@ trait HasSlug
 
         $slug = str_slug($sluggable);
 
-        $i = 1;
-        while($this->slugExists($slug, $locale)) {
+        $i = 0;
+        while($this->slugExists($slug, $locale, $i)) {
+            $i++;
+        }
+
+        if ($i) {
             $slug = $slug . '-' . $i;
         }
 
@@ -77,20 +81,37 @@ trait HasSlug
      *
      * @param string $slug
      * @param string|null $locale
+     * @param int $i
      * @return bool
      */
-    public function slugExists($slug, $locale = null)
+    public function slugExists($slug, $locale = null, $i = 0)
     {
         $whereKey = is_null($locale) ? $this->getSlugStorageAttribute() : $this->getSlugStorageAttribute().'->'.$locale;
 
-        $query = static::where($whereKey, $slug)
-            ->withoutGlobalScopes();
+        if ($i) {
+            $slug = $slug . '-' . $i;
+        }
+
+        $query = $this->getSlugExistsQuery($whereKey, $slug);
 
         if ($this->usesSoftDeletes()) {
             $query->withTrashed();
         }
 
         return $query->exists();
+    }
+
+    /**
+     * Get the query that checks if the slug already exists
+     *
+     * @param string $whereKey
+     * @param string $slug
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function getSlugExistsQuery($whereKey, $slug)
+    {
+        return $query = static::where($whereKey, $slug)
+            ->withoutGlobalScopes();
     }
 
     /**
