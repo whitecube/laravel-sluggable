@@ -30,7 +30,6 @@ class SluggableTest extends TestCase
             ]
         ]);
 
-        $this->assertSame('{"en":"my-test-title","fr":"mon-titre-test"}', $model->getAttributes()['slug']);
         $this->assertSame('my-test-title', $model->slug);
         $this->assertSame('mon-titre-test', $model->translate('slug', 'fr'));
     }
@@ -48,7 +47,6 @@ class SluggableTest extends TestCase
             ]
         ]);
 
-        $this->assertSame('{"en":"my-test-title","fr":"custom-french-slug"}', $model->getAttributes()['slug']);
         $this->assertSame('my-test-title', $model->slug);
         $this->assertSame('custom-french-slug', $model->translate('slug', 'fr'));
     }

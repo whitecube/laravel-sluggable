@@ -205,7 +205,7 @@ trait HasSlug
         $parameters = $route->signatureParameters(UrlRoutable::class);
 
         $parameter = array_reduce($parameters, function($carry, $parameter) {
-            if($carry || $parameter->getClass()->name !== get_class()) return $carry;
+            if($carry || $parameter->getType()->getName() !== get_class()) return $carry;
             return $parameter;
         });
 
