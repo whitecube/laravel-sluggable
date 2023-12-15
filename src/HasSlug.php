@@ -260,14 +260,12 @@ trait HasSlug
             ->get();
 
         // If we have zero or multiple results, don't guess
-        if($results->count() !== 1) {
-            return;
+        if($results->count() === 1) {
+            return $results->first();
         }
 
         // Redirect to the current route using the translated model key
-        return abort(301, '', ['Location' => $results->first()->getSluggedUrlForRoute(
-            Router::current(), $locale, false
-        )]);
+        return abort(404);
     }
 
     /**
