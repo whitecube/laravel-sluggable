@@ -256,7 +256,7 @@ trait HasSlug
 
         // Get the models where this slug exists in other langs as well
         $results = $this->getRouteBindingQueryBuilder()
-            ->whereRaw('JSON_SEARCH(`'.$key.'`, "one", "?")', [$value])
+            ->whereRaw('JSON_SEARCH(`'.$key.'`, "one", ?)', [$value])
             ->get();
 
         // If we have zero or multiple results, don't guess
