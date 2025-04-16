@@ -5,7 +5,7 @@ namespace Whitecube\Sluggable;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Contracts\Routing\UrlRoutable;
-use Illuminate\Support\Facades\Route as Router;
+use Illuminate\Support\Str;
 
 trait HasSlug
 {
@@ -62,7 +62,7 @@ trait HasSlug
             $sluggable = $this->getTranslation($sluggable, $locale);
         }
 
-        $slug = str_slug($sluggable);
+        $slug = Str::slug($sluggable);
 
         $i = 0;
         while($this->slugExists($slug, $locale, $i)) {
@@ -180,7 +180,7 @@ trait HasSlug
      * Generate an URI containing the model's slug from
      * given route.
      *
-     * @param Illuminate\Routing\Route $route
+     * @param \Illuminate\Routing\Route $route
      * @param null|string $locale
      * @param bool $fullUrl
      * @return string
@@ -196,7 +196,7 @@ trait HasSlug
      * Get a bound route's parameters with the
      * model's slug set to the desired locale.
      *
-     * @param Illuminate\Routing\Route $route
+     * @param \Illuminate\Routing\Route $route
      * @param null|string $locale
      * @return array
      */
